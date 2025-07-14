@@ -1,7 +1,9 @@
 $(document).ready(function() {
+
+        // --- VARIABEL BARU & DETEKSI MOBILE ---
+        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         
         // Game Variables
-        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         let gameState = {
             score: 0,
             health: 100,
@@ -135,6 +137,7 @@ $(document).ready(function() {
         class Controls {
             constructor() {
                 this.keys = {};
+                // Desktop Controls
                 $(window).on('keydown', e => this.keys[e.key.toLowerCase()] = true);
                 $(window).on('keyup', e => this.keys[e.key.toLowerCase()] = false);
                 $(window).on('mousedown', () => this.keys['mousedown'] = true);
@@ -144,9 +147,7 @@ $(document).ready(function() {
                 this.joystick = { active: false, angle: 0, power: 0 };
             }
 
-            isDown(key) {
-                return this.keys[key] || false;
-            }
+            isDown(key) { return this.keys[key] || false; }
         }
         
         // ===================================
@@ -246,20 +247,26 @@ $(document).ready(function() {
             
             shoot() {
                 const now = Date.now();
-                if (this.controls.isDown('mousedown') && this.ammo > 0 && now - this.lastShot > this.shootCooldown) {
+                // --- PERUBAHAN: Cek tombol 'fire' dari mobile juga ---
+                if ((this.controls.isDown('mousedown') || this.controls.isDown('fire')) && this.ammo > 0 && now - this.lastShot > this.shootCooldown) {
                     this.lastShot = now;
                     this.ammo--;
                     gameState.ammo = this.ammo;
                     
                     const armRotation = isMobile ? this.aimAngle : this.anim.rightArm.rot;
-                    const gunTipX = this.x + this.anim.rightArm.offsetX;
-                    const gunTipY = this.y + this.anim.rightArm.offsetY;
-                    
-                    this.game.addBullet(new Bullet({ x: gunTipX, y: gunTipY, angle: armRotation, parentContainer: this.game.container }));
-                    
+                    const gunTipX = this.x + Math.cos(armRotation) * 25;
+                    const gunTipY = this.y + Math.sin(armRotation) * 25;
+
+                    this.game.addBullet(new Bullet({
+                        x: gunTipX,
+                        y: gunTipY,
+                        angle: armRotation,
+                        parentContainer:
+                        this.game.container
+                    }));
+
                     createFlash(gunTipX, gunTipY);
                     createSmoke(gunTipX, gunTipY, 3);
-                    
                     this.anim.knockback = SETTINGS.SHOOT_KNOCKBACK;
                     if (!isMobile) $('.crosshair').addClass('active');
                 } else {
@@ -267,9 +274,8 @@ $(document).ready(function() {
                 }
             }
             
-            
-
             move() {
+                // --- PERUBAHAN: Logika gerak dikontrol joystick di mobile ---
                 if (isMobile && this.controls.joystick.active) {
                     this.xvel = Math.cos(this.controls.joystick.angle) * this.speed * this.controls.joystick.power;
                     this.yvel = Math.sin(this.controls.joystick.angle) * this.speed * this.controls.joystick.power;
@@ -288,6 +294,37 @@ $(document).ready(function() {
                 this.x += this.xvel * this.speedBoost;
                 this.y += this.yvel * this.speedBoost;
             }
+
+            // --- FUNGSI BARU: AUTO AIM ---
+            autoAim() {
+                let closestEnemy = null;
+                let minDistance = Infinity;
+
+                this.game.enemies.forEach(enemy => {
+                    const dx = enemy.x - this.x;
+                    const dy = enemy.y - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestEnemy = enemy;
+                    }
+                });
+
+                if (closestEnemy) {
+                    const dx = closestEnemy.x - this.x;
+                    const dy = closestEnemy.y - this.y;
+                    this.aimAngle = Math.atan2(dy, dx);
+                    this.anim.rightArm.rot = this.aimAngle;
+                    this.scaleX = (closestEnemy.x < this.x) ? -1 : 1;
+                } else {
+                    // Jika tidak ada musuh, arahkan ke depan sesuai gerakan
+                    if (this.controls.joystick.active) {
+                        this.aimAngle = this.controls.joystick.angle;
+                        this.anim.rightArm.rot = this.aimAngle;
+                    }
+                    this.scaleX = (Math.cos(this.aimAngle) < 0) ? -1 : 1;
+                }
+            }
             
             aim() {
                 const dx = mouse.x - this.x;
@@ -296,7 +333,7 @@ $(document).ready(function() {
             }
             
             turn() {
-                if(isMobile) return; // Penentuan arah dihandle oleh autoAim di mobile
+                if(isMobile) return;
                 this.scaleX = (mouse.x < this.x) ? -1 : 1;
             }
             
@@ -688,18 +725,9 @@ $(document).ready(function() {
             mouse.y = e.clientY;
         });
 
-        $('#restart-btn').on('click', function() {
-            startGame();
-        });
-        
-        // Initial setup
-        createParticles();
-        startGame();
+        $('#restart-btn').on('click', startGame);
 
-		});
-    
-
-    // --- LOGIKA BARU: SETUP KONTROL MOBILE ---
+        // --- LOGIKA BARU: SETUP KONTROL MOBILE ---
         function setupMobileControls() {
             if (!isMobile) return;
 
@@ -750,15 +778,13 @@ $(document).ready(function() {
             });
         }
         
-        // --- INISIALISASI GAME ---
+        // Initial setup
         createParticles();
         startGame();
         setupMobileControls();
-   
-        // Global restart function (accessible from HTML onclick)
+	});
+    
+    // Global restart function (accessible from HTML onclick)
     function restartGame() {
         $('#restart-btn').click();
     }
-    
-    
-    
