@@ -1,6 +1,7 @@
 $(document).ready(function() {
         
         // Game Variables
+        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         let gameState = {
             score: 0,
             health: 100,
@@ -138,6 +139,9 @@ $(document).ready(function() {
                 $(window).on('keyup', e => this.keys[e.key.toLowerCase()] = false);
                 $(window).on('mousedown', () => this.keys['mousedown'] = true);
                 $(window).on('mouseup', () => this.keys['mousedown'] = false);
+
+                // Mobile Controls (akan di-setup di bawah)
+                this.joystick = { active: false, angle: 0, power: 0 };
             }
 
             isDown(key) {
@@ -172,6 +176,7 @@ $(document).ready(function() {
                 this.speedBoostTimer = 0;
                 this.lastShot = 0;
                 this.shootCooldown = 150; // milliseconds
+                this.aimAngle = 0;
 
                 this.anim = {
                     counter: 0,
@@ -246,37 +251,42 @@ $(document).ready(function() {
                     this.ammo--;
                     gameState.ammo = this.ammo;
                     
+                    const armRotation = isMobile ? this.aimAngle : this.anim.rightArm.rot;
                     const gunTipX = this.x + this.anim.rightArm.offsetX;
                     const gunTipY = this.y + this.anim.rightArm.offsetY;
                     
-                    this.game.addBullet(new Bullet({
-                        x: gunTipX,
-                        y: gunTipY,
-                        angle: this.anim.rightArm.rot,
-                        parentContainer: this.game.container
-                    }));
+                    this.game.addBullet(new Bullet({ x: gunTipX, y: gunTipY, angle: armRotation, parentContainer: this.game.container }));
                     
                     createFlash(gunTipX, gunTipY);
                     createSmoke(gunTipX, gunTipY, 3);
                     
                     this.anim.knockback = SETTINGS.SHOOT_KNOCKBACK;
-                    $('.crosshair').addClass('active');
+                    if (!isMobile) $('.crosshair').addClass('active');
                 } else {
-                     $('.crosshair').removeClass('active');
+                    if (!isMobile) $('.crosshair').removeClass('active');
                 }
             }
             
+            
+
             move() {
-                if (this.controls.isDown('a') || this.controls.isDown('arrowleft')) this.xvel -= this.speed * this.speedBoost;
-                if (this.controls.isDown('d') || this.controls.isDown('arrowright')) this.xvel += this.speed * this.speedBoost;
-                if (this.controls.isDown('w') || this.controls.isDown('arrowup')) this.yvel -= this.speed * this.speedBoost;
-                if (this.controls.isDown('s') || this.controls.isDown('arrowdown')) this.yvel += this.speed * this.speedBoost;
+                if (isMobile && this.controls.joystick.active) {
+                    this.xvel = Math.cos(this.controls.joystick.angle) * this.speed * this.controls.joystick.power;
+                    this.yvel = Math.sin(this.controls.joystick.angle) * this.speed * this.controls.joystick.power;
+                } else if (!isMobile) {
+                    this.xvel = 0;
+                    this.yvel = 0;
+                    if (this.controls.isDown('a') || this.controls.isDown('arrowleft')) this.xvel -= this.speed;
+                    if (this.controls.isDown('d') || this.controls.isDown('arrowright')) this.xvel += this.speed;
+                    if (this.controls.isDown('w') || this.controls.isDown('arrowup')) this.yvel -= this.speed;
+                    if (this.controls.isDown('s') || this.controls.isDown('arrowdown')) this.yvel += this.speed;
+                } else {
+                    this.xvel = 0;
+                    this.yvel = 0;
+                }
                 
-                this.xvel *= this.friction;
-                this.yvel *= this.friction;
-                
-                this.x += this.xvel;
-                this.y += this.yvel;
+                this.x += this.xvel * this.speedBoost;
+                this.y += this.yvel * this.speedBoost;
             }
             
             aim() {
@@ -286,6 +296,7 @@ $(document).ready(function() {
             }
             
             turn() {
+                if(isMobile) return; // Penentuan arah dihandle oleh autoAim di mobile
                 this.scaleX = (mouse.x < this.x) ? -1 : 1;
             }
             
@@ -345,7 +356,13 @@ $(document).ready(function() {
             
             update() {
                 if (gameState.isGameOver) return;
-                this.aim();
+                
+                if (isMobile) {
+                    this.autoAim();
+                } else {
+                    this.aim();
+                }
+
                 this.turn();
                 this.move();
                 this.shoot();
@@ -681,7 +698,67 @@ $(document).ready(function() {
 
 		});
     
-    // Global restart function (accessible from HTML onclick)
+
+    // --- LOGIKA BARU: SETUP KONTROL MOBILE ---
+        function setupMobileControls() {
+            if (!isMobile) return;
+
+            const fireButton = $('#fire-button');
+            const joystickBase = $('#joystick-base');
+            const joystickKnob = $('#joystick-knob');
+            const baseRect = joystickBase[0].getBoundingClientRect();
+            const baseRadius = baseRect.width / 2;
+            const baseCenterX = baseRect.left + baseRadius;
+            const baseCenterY = baseRect.top + baseRadius;
+            
+            // Tombol Tembak
+            fireButton.on('touchstart', (e) => {
+                e.preventDefault();
+                game.controls.keys['fire'] = true;
+            });
+            fireButton.on('touchend touchcancel', (e) => {
+                e.preventDefault();
+                game.controls.keys['fire'] = false;
+            });
+
+            // Joystick
+            joystickBase.on('touchstart touchmove', (e) => {
+                e.preventDefault();
+                game.controls.joystick.active = true;
+                const touch = e.originalEvent.touches[0];
+                let deltaX = touch.clientX - baseCenterX;
+                let deltaY = touch.clientY - baseCenterY;
+                
+                let distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                let angle = Math.atan2(deltaY, deltaX);
+                
+                game.controls.joystick.angle = angle;
+                game.controls.joystick.power = Math.min(1, distance / baseRadius);
+
+                if (distance > baseRadius) {
+                    deltaX = Math.cos(angle) * baseRadius;
+                    deltaY = Math.sin(angle) * baseRadius;
+                }
+                
+                joystickKnob.css('transform', `translate(-50%, -50%) translate(${deltaX}px, ${deltaY}px)`);
+            });
+
+            joystickBase.on('touchend touchcancel', (e) => {
+                e.preventDefault();
+                game.controls.joystick.active = false;
+                joystickKnob.css('transform', `translate(-50%, -50%)`);
+            });
+        }
+        
+        // --- INISIALISASI GAME ---
+        createParticles();
+        startGame();
+        setupMobileControls();
+   
+        // Global restart function (accessible from HTML onclick)
     function restartGame() {
         $('#restart-btn').click();
     }
+    
+    
+    
