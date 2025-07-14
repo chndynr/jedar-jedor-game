@@ -583,7 +583,7 @@
             .crosshair { width: 25px; height: 25px; }
         }
 
-        --- CSS UNTUK KONTROL MOBILE ---
+        /* --- CSS UNTUK KONTROL MOBILE --- */
 .mobile-controls {
     display: none; /* Sembunyi di desktop, muncul di mobile via media query */
     position: fixed;
@@ -633,7 +633,7 @@
 
 #fire-button:active {
     background: rgba(255, 80, 80, 0.6);
-}
+} 
 
 /* Media Query untuk hanya menampilkan di perangkat sentuh/layar kecil */
 @media (max-width: 800px) {
