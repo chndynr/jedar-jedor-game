@@ -2,9 +2,6 @@
 # jedar-jedor-game
 
 # 💥 JEDAR JEDOR - 2D Wave Shooter
-
-![Gameplay GIF](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaDB1eGhob2JtY2J1Z2Q4a2Z0ZzRjM2w0Z3A1aG1iY284c2w5eG01eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5KF7TCgG2o3O5iK5G6/giphy.gif)
-
 > *Sebuah game 2D wave-based arena shooter yang intens dan adiktif, dibuat dengan teknologi web modern. Bertahan hidup dari gelombang musuh yang semakin ganas, kumpulkan power-up, dan raih skor tertinggi di berbagai arena yang unik.*
 
 **Mainkan Gamenya Langsung:** **[https://jedar-jedor-game.vercel.app/](https://jedar-jedor-game.vercel.app/)**
