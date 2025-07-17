@@ -48,27 +48,21 @@ Proyek ini dibangun sepenuhnya di sisi *frontend* menggunakan teknologi web stan
 - **[Vercel](https://vercel.com/)**: Platform untuk *hosting* dan *deployment* aplikasi web secara otomatis.
 - **[Git & GitHub](https://github.com/)**: Untuk kontrol versi dan manajemen kode.
 
-### Asisten Pengembangan AI:
-- **[IBM Watsonx (Granite)](https://www.ibm.com/watsonx)** & **[Google Gemini](https://gemini.google.com/)**: Digunakan sebagai *pair programmer* untuk akselerasi pengembangan, *brainstorming* fitur, dan *debugging* kritis.
-
----
-
 ## 🚀 Panduan Instalasi & Menjalankan
 
 Untuk menjalankan proyek ini di komputer lokal Anda, ikuti langkah-langkah berikut:
 
 ### Prasyarat:
-- [Node.js](https://nodejs.org/en/download/) (untuk menggunakan `live-server` atau sejenisnya)
 - [Git](https://git-scm.com/downloads)
-- Editor Kode seperti [Visual Studio Code](https://code.visualstudio.com/)
+- Editor Kode seperti [Visual Studio Code](https://code.visualstudio.com/) (dengan ekstensi **Live Server**)
 
 ### 1. Setup Proyek
 ```bash
 # 1. Clone repositori ini
-git clone [https://github.com/](https://github.com/)[NAMA-USER-ANDA]/[NAMA-REPO-ANDA].git
+git clone [https://github.com/chndynr/jedar-jedor-game.git](https://github.com/chndynr/jedar-jedor-game.git)
 
 # 2. Masuk ke direktori proyek
-cd [NAMA-REPO-ANDA]
+cd jedar-jedor-game
 ```
 
 ### 2. Jalankan Game
