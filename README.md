@@ -1,5 +1,4 @@
 <img width="1904" height="884" alt="jedarjedor" src="https://github.com/user-attachments/assets/7af67a92-2955-4cac-882f-af0ee2b8570b" />
-# jedar-jedor-game
 
 # 💥 JEDAR JEDOR - 2D Wave Shooter
 > *Sebuah game 2D wave-based arena shooter yang intens dan adiktif, dibuat dengan teknologi web modern. Bertahan hidup dari gelombang musuh yang semakin ganas, kumpulkan power-up, dan raih skor tertinggi di berbagai arena yang unik.*
